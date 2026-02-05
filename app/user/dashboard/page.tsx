@@ -68,7 +68,7 @@ export default function UserDashboard() {
       <nav className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
-            <h1 className="text-xl font-bold">User Dashboard</h1>
+            <h1 className="text-xl font-bold text-gray-900">User Dashboard</h1>
             <div className="flex gap-4">
               <Link
                 href="/user/providers"

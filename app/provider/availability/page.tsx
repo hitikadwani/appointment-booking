@@ -106,7 +106,7 @@ export default function AvailabilityPage() {
       <nav className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
-            <Link href="/provider/dashboard" className="text-xl font-bold">
+            <Link href="/provider/dashboard" className="text-xl font-bold text-gray-900">
               ← Back to Dashboard
             </Link>
           </div>
@@ -148,7 +148,7 @@ export default function AvailabilityPage() {
                           day_of_week: parseInt(e.target.value),
                         })
                       }
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white"
                     >
                       {DAYS.map((day) => (
                         <option key={day.value} value={day.value}>
@@ -167,7 +167,7 @@ export default function AvailabilityPage() {
                       onChange={(e) =>
                         setSlotForm({ ...slotForm, start_time: e.target.value })
                       }
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white"
                     />
                   </div>
                   <div>
@@ -180,7 +180,7 @@ export default function AvailabilityPage() {
                       onChange={(e) =>
                         setSlotForm({ ...slotForm, end_time: e.target.value })
                       }
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white"
                     />
                   </div>
                 </div>
@@ -247,7 +247,7 @@ export default function AvailabilityPage() {
                       onChange={(e) =>
                         setBlockForm({ ...blockForm, blocked_date: e.target.value })
                       }
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white"
                     />
                   </div>
                   <div>
@@ -261,7 +261,7 @@ export default function AvailabilityPage() {
                         setBlockForm({ ...blockForm, reason: e.target.value })
                       }
                       placeholder="Holiday, Vacation, etc."
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white"
                     />
                   </div>
                 </div>

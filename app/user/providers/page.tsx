@@ -60,7 +60,7 @@ export default function ProvidersPage() {
       <nav className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
-            <Link href="/user/dashboard" className="text-xl font-bold">
+            <Link href="/user/dashboard" className="text-xl font-bold text-gray-900">
               ← Back to Dashboard
             </Link>
           </div>
