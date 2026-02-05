@@ -25,6 +25,7 @@ export default function AvailabilityPage() {
   const [loadingData, setLoadingData] = useState(true);
   const [showSlotForm, setShowSlotForm] = useState(false);
   const [showBlockForm, setShowBlockForm] = useState(false);
+  const [error, setError] = useState('');
   const [slotForm, setSlotForm] = useState({
     day_of_week: 1,
     start_time: '09:00',
@@ -67,12 +68,32 @@ export default function AvailabilityPage() {
 
   const handleAddSlot = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+
+    // Frontend validation: Check if end time is after start time
+    if (slotForm.start_time >= slotForm.end_time) {
+      setError('End time must be after start time');
+      return;
+    }
+
+    // Frontend validation: Check for overlaps with existing slots
+    const existingSlots = slots.filter(s => s.day_of_week === slotForm.day_of_week && s.is_active);
+    for (const slot of existingSlots) {
+      if (slotForm.start_time < slot.end_time && slotForm.end_time > slot.start_time) {
+        setError(`Time slot overlaps with existing slot: ${slot.start_time} - ${slot.end_time}`);
+        return;
+      }
+    }
+
     try {
       await providerAPI.addAvailability(slotForm);
       setSlotForm({ day_of_week: 1, start_time: '09:00', end_time: '17:00' });
       setShowSlotForm(false);
+      setError('');
       fetchData();
-    } catch (error) {
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.error || 'Failed to add slot';
+      setError(errorMsg);
       console.error('Failed to add slot:', error);
     }
   };
@@ -126,7 +147,10 @@ export default function AvailabilityPage() {
                 Weekly Schedule
               </h3>
               <button
-                onClick={() => setShowSlotForm(!showSlotForm)}
+                onClick={() => {
+                  setShowSlotForm(!showSlotForm);
+                  setError('');
+                }}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
               >
                 {showSlotForm ? 'Cancel' : '+ Add Time Slot'}
@@ -135,6 +159,11 @@ export default function AvailabilityPage() {
 
             {showSlotForm && (
               <form onSubmit={handleAddSlot} className="mb-6 p-4 bg-gray-50 rounded">
+                {error && (
+                  <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
+                    {error}
+                  </div>
+                )}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700">

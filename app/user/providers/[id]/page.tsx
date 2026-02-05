@@ -26,6 +26,14 @@ export default function ProviderDetailPage() {
 
   const providerId = Number(params.id);
 
+  // Helper function to format date correctly (avoids timezone issues)
+  const formatDateString = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   useEffect(() => {
     if (!loading && !user) {
       router.push('/login');
@@ -56,8 +64,12 @@ export default function ProviderDetailPage() {
   const fetchAvailableSlots = async () => {
     if (!selectedDate) return;
     setLoadingSlots(true);
+    // Clear selected time when fetching new slots
+    setSelectedTime('');
     try {
-      const dateStr = selectedDate.toISOString().split('T')[0];
+      const dateStr = formatDateString(selectedDate);
+      console.log('Fetching slots for:', dateStr, 'Day:', ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate.getDay()]);
+      
       const response = await publicAPI.getAvailableSlots(providerId, dateStr);
       setAvailableSlots(response.data);
     } catch (error) {
@@ -79,7 +91,8 @@ export default function ProviderDetailPage() {
     setSuccess('');
 
     try {
-      const dateStr = selectedDate.toISOString().split('T')[0];
+      const dateStr = formatDateString(selectedDate);
+      
       await userAPI.createBooking({
         provider_id: providerId,
         service_id: selectedService.id,
@@ -154,11 +167,29 @@ export default function ProviderDetailPage() {
   const weekDays = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
   const previousMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
+    const newMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1);
+    // Don't allow going to past months
+    const today = new Date();
+    const currentMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    if (newMonth >= currentMonthStart) {
+      setCurrentMonth(newMonth);
+    }
   };
 
   const nextMonth = () => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
+  };
+
+  const canGoPreviousMonth = () => {
+    const today = new Date();
+    const currentMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    const prevMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1);
+    return prevMonth >= currentMonthStart;
+  };
+
+  const goToToday = () => {
+    setCurrentMonth(new Date());
   };
 
   if (loading || loadingServices) {
@@ -204,31 +235,43 @@ export default function ProviderDetailPage() {
             <h3 className="text-lg font-medium text-gray-900 mb-4">
               Step 1: Select a Service
             </h3>
-            <div className="grid grid-cols-1 gap-4">
-              {services.map((service) => (
-                <div
-                  key={service.id}
-                  onClick={() => setSelectedService(service)}
-                  className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                    selectedService?.id === service.id
-                      ? 'border-blue-600 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className="font-medium text-gray-900">{service.name}</h4>
-                      <p className="text-sm text-gray-500 mt-1">
-                        {service.description}
-                      </p>
+            {services.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <p>No services available from this provider.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4">
+                {services.map((service) => (
+                  <div
+                    key={service.id}
+                    onClick={() => {
+                      setSelectedService(service);
+                      // Clear date and time when changing service
+                      setSelectedDate(null);
+                      setSelectedTime('');
+                      setAvailableSlots([]);
+                    }}
+                    className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                      selectedService?.id === service.id
+                        ? 'border-blue-600 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-medium text-gray-900">{service.name}</h4>
+                        <p className="text-sm text-gray-500 mt-1">
+                          {service.description}
+                        </p>
+                      </div>
+                      <span className="text-lg font-bold text-gray-900">
+                        ${service.price}
+                      </span>
                     </div>
-                    <span className="text-lg font-bold text-gray-900">
-                      ${service.price}
-                    </span>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Step 2 & 3: Calendar and Time Slots Side by Side */}
@@ -241,26 +284,45 @@ export default function ProviderDetailPage() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Calendar */}
                 <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <button
-                      onClick={previousMonth}
-                      className="p-2 hover:bg-gray-100 rounded-full"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                      </svg>
-                    </button>
-                    <h4 className="text-lg font-semibold">
-                      {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
-                    </h4>
-                    <button
-                      onClick={nextMonth}
-                      className="p-2 hover:bg-gray-100 rounded-full"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <button
+                        onClick={previousMonth}
+                        disabled={!canGoPreviousMonth()}
+                        className={`p-2 rounded-full transition-all ${
+                          canGoPreviousMonth() 
+                            ? 'hover:bg-gray-100 text-gray-700 cursor-pointer' 
+                            : 'text-gray-300 cursor-not-allowed'
+                        }`}
+                        title={canGoPreviousMonth() ? 'Previous month' : 'Cannot go to past months'}
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+                      <div className="text-center">
+                        <h4 className="text-lg font-semibold text-gray-900">
+                          {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+                        </h4>
+                      </div>
+                      <button
+                        onClick={nextMonth}
+                        className="p-2 hover:bg-gray-100 rounded-full text-gray-700 transition-all"
+                        title="Next month"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </div>
+                    <div className="flex justify-center">
+                      <button
+                        onClick={goToToday}
+                        className="text-xs px-3 py-1 text-blue-600 hover:bg-blue-50 rounded-full transition-all"
+                      >
+                        Go to Today
+                      </button>
+                    </div>
                   </div>
 
                   {/* Week day headers */}
@@ -311,18 +373,46 @@ export default function ProviderDetailPage() {
 
                 {/* Time Slots */}
                 <div>
-                  <h4 className="text-sm font-medium text-gray-700 mb-4">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">
                     {selectedDate ? 'Available Times' : 'Select a date first'}
                   </h4>
+                  {selectedDate && (
+                    <p className="text-xs text-gray-500 mb-4">
+                      {selectedDate.toLocaleDateString('en-US', { 
+                        weekday: 'long', 
+                        month: 'short', 
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}
+                    </p>
+                  )}
                   {loadingSlots ? (
-                    <div className="text-center py-8 text-gray-500">Loading slots...</div>
+                    <div className="text-center py-8">
+                      <div className="animate-pulse text-gray-500">
+                        <svg className="animate-spin h-8 w-8 mx-auto mb-2 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Loading available times...
+                      </div>
+                    </div>
                   ) : !selectedDate ? (
                     <div className="text-center py-8 text-gray-400">
+                      <svg className="w-16 h-16 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
                       Please select a date to see available times
                     </div>
                   ) : availableSlots.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      No available slots for this date
+                    <div className="text-center py-8">
+                      <svg className="w-16 h-16 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <p className="text-gray-600 font-medium mb-1">No available slots</p>
+                      <p className="text-sm text-gray-500">
+                        All time slots are booked for this date.<br />
+                        Try selecting a different day.
+                      </p>
                     </div>
                   ) : (
                     <div className="space-y-2 max-h-96 overflow-y-auto">

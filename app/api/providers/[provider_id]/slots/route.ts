@@ -17,7 +17,13 @@ export async function GET(
       );
     }
 
-    const dayOfWeek = new Date(date).getDay();
+    // Parse date correctly to avoid timezone issues
+    // Date string is in format YYYY-MM-DD
+    const [year, month, day] = date.split('-').map(Number);
+    const dateObj = new Date(year, month - 1, day); // month is 0-indexed
+    const dayOfWeek = dateObj.getDay();
+    
+    console.log('Date requested:', date, 'Day of week:', dayOfWeek, ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dayOfWeek]);
 
     // Check if date is blocked
     const blocked = await query(
@@ -38,13 +44,20 @@ export async function GET(
       return NextResponse.json([]);
     }
 
-    // Get existing bookings for that date
+    // Get existing bookings for that date (only count pending, confirmed, and completed as occupied)
     const booked = await query(
-      'SELECT appointment_time FROM appointments WHERE provider_id = $1 AND appointment_date = $2 AND status NOT IN ($3, $4)',
-      [provider_id, date, 'cancelled', 'rejected']
+      'SELECT appointment_time FROM appointments WHERE provider_id = $1 AND appointment_date = $2 AND status IN ($3, $4, $5)',
+      [provider_id, date, 'pending', 'confirmed', 'completed']
     );
 
-    const bookedSet = new Set(booked.rows.map((r: any) => r.appointment_time));
+    // Normalize times to HH:MM format for comparison
+    const bookedSet = new Set(
+      booked.rows.map((r: any) => {
+        const time = r.appointment_time;
+        // Handle both "HH:MM:SS" and "HH:MM" formats
+        return typeof time === 'string' ? time.substring(0, 5) : time;
+      })
+    );
 
     // Generate hourly slots
     const availableSlots: string[] = [];
@@ -65,8 +78,8 @@ export async function GET(
       while (currentHour < endHour || (currentHour === endHour && currentMin < endMin)) {
         const timeStr = `${String(currentHour).padStart(2, '0')}:${String(currentMin).padStart(2, '0')}`;
 
-        // Check if this slot is not booked
-        if (!bookedSet.has(timeStr) && !bookedSet.has(`${timeStr}:00`)) {
+        // Check if this slot is not booked (normalize to HH:MM format)
+        if (!bookedSet.has(timeStr)) {
           availableSlots.push(timeStr);
         }
 
