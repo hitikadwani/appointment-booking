@@ -20,7 +20,6 @@ A full-stack appointment booking application built with Next.js 16, featuring in
 - **TypeScript**
 - **Tailwind CSS 4**
 - **Axios** for API calls
-- **date-fns** for date manipulation
 
 ### Backend (API Routes)
 - **Next.js API Routes** (Serverless Functions)
@@ -29,28 +28,7 @@ A full-stack appointment booking application built with Next.js 16, featuring in
 - **bcryptjs** for password hashing
 - **pg** for database connection
 
-## Project Structure
 
-```
-/app
-  /api                    # Backend API routes
-    /auth                 # Authentication endpoints
-    /providers            # Public provider endpoints
-    /user                 # User-specific endpoints
-    /provider             # Provider-specific endpoints
-  /(auth)                 # Frontend auth pages
-  /provider               # Provider dashboard pages
-  /user                   # User dashboard pages
-  
-/lib
-  db.ts                   # Database connection
-  auth-utils.ts           # Authentication utilities
-  provider-utils.ts       # Provider helper functions
-  api.ts                  # Axios API client
-  schema.sql              # Database schema
-
-/types
-  index.ts                # TypeScript types
 ```
 
 ## Getting Started
@@ -65,7 +43,7 @@ A full-stack appointment booking application built with Next.js 16, featuring in
 
 1. **Clone the repository**
    ```bash
-   git clone <your-repo-url>
+   git clone git@github.com:hitikadwani/appointment-booking.git
    cd appointment-booking
    ```
 
@@ -143,18 +121,7 @@ The application uses 6 main tables:
 
 See `lib/schema.sql` for the complete schema.
 
-## Deployment
 
-This application is optimized for deployment on Vercel. See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
-
-### Quick Deploy to Vercel
-
-1. Push your code to GitHub
-2. Import your repository to Vercel
-3. Add environment variables (DATABASE_URL, JWT_SECRET, NODE_ENV)
-4. Deploy!
-
-The entire application (frontend + backend) deploys as a single Next.js application.
 
 ## Development
 
@@ -186,27 +153,8 @@ Required environment variables:
 - `JWT_SECRET` - Secret key for JWT token signing (use a strong value in production)
 - `NODE_ENV` - Environment (development/production)
 
-## Features Roadmap
 
-- [ ] Email notifications for bookings
-- [ ] Payment integration
-- [ ] Calendar integration
-- [ ] Reviews and ratings
-- [ ] Multi-language support
-- [ ] Mobile app (React Native)
 
-## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
 
-## License
 
-MIT License - feel free to use this project for your own purposes.
-
-## Support
-
-For issues or questions, please open an issue on GitHub.
-
----
-
-Built with ❤️ using Next.js and PostgreSQL
